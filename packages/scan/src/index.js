@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { getNextScanHeight, updateScanHeight } = require("./mongo/scanHeight");
-const { getExtrinsicCollection } = require("./mongo")
+const { getExtrinsicCollection } = require("./mongo");
 const { getApi } = require("./api");
 const { updateHeight } = require("./chain/latestHead");
 const { deleteDataFrom } = require("./clean");
@@ -64,20 +64,21 @@ async function scanBlockByHeight(scanHeight) {
 }
 
 async function test() {
-  const exCol = await getExtrinsicCollection()
-  const exs = await exCol.find({
-    $or: [{ section: 'proxy' }, { section: 'treasury' }]
-  })
-    .sort({ 'indexer.blockHeight': 1 })
-    .toArray()
+  const exCol = await getExtrinsicCollection();
+  const exs = await exCol
+    .find({
+      $or: [{ section: "proxy", name: "proxy" }, { section: "treasury" }],
+    })
+    .sort({ "indexer.blockHeight": 1 })
+    .toArray();
 
-  console.log(exs)
-  const heightArr = exs.map(ex => ex.indexer.blockHeight)
-  const str = heightArr.join(",\n")
+  console.log(exs);
+  const heightArr = exs.map((ex) => ex.indexer.blockHeight);
+  const str = heightArr.join(",\n");
 
-  require('fs').writeFile('./helloworld.txt', str, function (err) {
+  require("fs").writeFile("./helloworld.txt", str, function (err) {
     if (err) return console.log(err);
-    console.log('Hello World > helloworld.txt');
+    console.log("Hello World > helloworld.txt");
   });
 }
 
