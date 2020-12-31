@@ -1,5 +1,4 @@
 const { extractExtrinsicEvents, getExtrinsicSigner } = require("../utils");
-const { getExtrinsicCollection } = require("../mongo");
 const { isExtrinsicSuccess } = require("../utils");
 const { u8aToHex } = require("@polkadot/util");
 const { extractExtrinsicBusinessData } = require("./extractBusiness");
@@ -20,36 +19,25 @@ async function handleExtrinsics(extrinsics = [], allEvents = [], indexer) {
   }
 }
 
-/**
- *
- * 解析并处理交易
- *
- */
-async function handleExtrinsic(extrinsic, indexer, events) {
+function normalizeExtrinsic(extrinsic, events) {
+  if (!extrinsic) {
+    throw new Error("Invalid extrinsic object");
+  }
+
   const hash = extrinsic.hash.toHex();
   const callIndex = u8aToHex(extrinsic.callIndex);
   const { args } = extrinsic.method.toJSON();
-  const name = extrinsic.method.methodName;
-  const section = extrinsic.method.sectionName;
+  const name = extrinsic.method.method;
+  const section = extrinsic.method.section;
   const signer = getExtrinsicSigner(extrinsic);
 
   const isSuccess = isExtrinsicSuccess(events);
 
-  await extractExtrinsicBusinessData(
-    section,
-    name,
-    args,
-    isSuccess,
-    indexer,
-    events
-  );
-
   const version = extrinsic.version;
   const data = u8aToHex(extrinsic.data); // 原始数据
 
-  const doc = {
+  return {
     hash,
-    indexer,
     signer,
     section,
     name,
@@ -59,14 +47,14 @@ async function handleExtrinsic(extrinsic, indexer, events) {
     data,
     isSuccess,
   };
+}
 
-  const exCol = await getExtrinsicCollection();
-  const result = await exCol.insertOne(doc);
-  if (result.result && !result.result.ok) {
-    // FIXME: Deal with db failura
-  }
+async function handleExtrinsic(extrinsic, indexer, events) {
+  const normalized = normalizeExtrinsic(extrinsic, events);
+  await extractExtrinsicBusinessData(normalized, indexer, events);
 }
 
 module.exports = {
   handleExtrinsics,
+  normalizeExtrinsic,
 };

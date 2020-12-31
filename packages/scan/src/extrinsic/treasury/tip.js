@@ -1,34 +1,53 @@
-const { TipMethods, Modules } = require("../../utils/constants");
-const { saveTipTimeline, updateTip } = require("../../store/tip");
+const {
+  TipMethods,
+  Modules,
+  ProxyMethods,
+  ksmFirstTipClosedHeight,
+} = require("../../utils/constants");
+const { updateTip } = require("../../store/tip");
 
-async function handleTipExtrinsic(
-  section,
-  name,
-  args,
-  isSuccess,
-  indexer,
-  events
-) {
+async function handleTipExtrinsic(normalizedExtrinsic, extrinsicIndexer) {
+  const { section, name, args } = normalizedExtrinsic;
+
   if (section !== Modules.Treasury) {
     return;
   }
 
-  if (!isSuccess) {
-    return;
-  }
-
-  if (name === TipMethods.tip) {
-    await handleTip(args, indexer, events);
+  const noEventTipClose =
+    name === TipMethods.closeTip &&
+    extrinsicIndexer.blockHeight < ksmFirstTipClosedHeight;
+  if (name === TipMethods.tip || noEventTipClose) {
+    await updateTip(args.hash, name, args, extrinsicIndexer, {
+      ...normalizedExtrinsic,
+      extrinsicIndexer,
+    });
   }
 }
 
-async function handleTip(args, indexer) {
-  const { hash } = args;
+// FIXME: not good to judge a tip proxy call
+function isTipProxy(callArgs) {
+  const keys = Object.keys(callArgs);
+  return (
+    keys.includes("hash") && keys.includes("tip_value") && keys.length === 2
+  );
+}
 
-  await saveTipTimeline(hash, TipMethods.tip, args, indexer);
-  await updateTip(hash, TipMethods.tip, args, indexer);
+async function handleTipByProxy(normalizedExtrinsic, extrinsicIndexer) {
+  const { section, name, args } = normalizedExtrinsic;
+  if (Modules.Proxy !== section || ProxyMethods.proxy !== name) {
+    return;
+  }
+
+  const callArgs = args.call.args;
+  if (isTipProxy(callArgs)) {
+    await updateTip(callArgs.hash, TipMethods.tip, callArgs, extrinsicIndexer, {
+      ...normalizedExtrinsic,
+      extrinsicIndexer,
+    });
+  }
 }
 
 module.exports = {
   handleTipExtrinsic,
+  handleTipByProxy,
 };

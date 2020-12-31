@@ -1,27 +1,26 @@
-const { handleTipExtrinsic } = require("./treasury/tip");
-const { handleBountyExtrinsic } = require("./treasury/bounty");
-const { handleProposalExtrinsic } = require("./treasury/proposal");
-const { handleCouncilExtrinsic } = require("./council");
+const { handleTipExtrinsic, handleTipByProxy } = require("./treasury/tip");
 
 async function extractExtrinsicBusinessData(
-  section,
-  name,
-  args,
-  isSuccess,
-  indexer,
+  normalizedExtrinsic,
+  extrinsicIndexer,
   events
 ) {
-  await handleTipExtrinsic(section, name, args, isSuccess, indexer, events);
-  await handleBountyExtrinsic(section, name, args, isSuccess, indexer, events);
-  await handleProposalExtrinsic(
-    section,
-    name,
-    args,
-    isSuccess,
-    indexer,
-    events
-  );
-  await handleCouncilExtrinsic(section, name, args, isSuccess, indexer, events);
+  if (!normalizedExtrinsic.isSuccess) {
+    return;
+  }
+
+  await handleTipExtrinsic(normalizedExtrinsic, extrinsicIndexer, events);
+  await handleTipByProxy(normalizedExtrinsic, extrinsicIndexer, events);
+  // await handleBountyExtrinsic(section, name, args, isSuccess, indexer, events);
+  // await handleProposalExtrinsic(
+  //   section,
+  //   name,
+  //   args,
+  //   isSuccess,
+  //   indexer,
+  //   events
+  // );
+  // await handleCouncilExtrinsic(section, name, args, isSuccess, indexer, events);
 }
 
 module.exports = {

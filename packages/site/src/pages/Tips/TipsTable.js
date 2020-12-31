@@ -11,6 +11,7 @@ import Balance from "../../components/Balance";
 import RightButton from "../../components/RightButton";
 import PairTextVertical from "../../components/PairTextVertical";
 import ReasonText from "./ReasonText";
+import { TipStatus } from "../../constants";
 
 const Wrapper = styled.div`
   overflow-x: scroll;
@@ -46,11 +47,13 @@ const StyledTable = styled(Table)`
 const TipsTable = ({ data, loading }) => {
   const history = useHistory();
 
-  const onClickRow = () => {
-    if (window.innerWidth < 1140) {
-      history.push("/detail");
+  const onClickRow = (height, hash) => {
+    if (height && hash) {
+      if (window.innerWidth < 1140) {
+        history.push(`/tips/${height}_${hash}`);
+      }
     }
-  };
+  }
 
   return (
     <Wrapper>
@@ -73,7 +76,7 @@ const TipsTable = ({ data, loading }) => {
             {(data &&
               data.length > 0 &&
               data.map((item, index) => (
-                <Table.Row key={index} onClick={onClickRow}>
+                <Table.Row key={index} onClick={() => onClickRow(item.proposeAtBlockHeight, item.hash)}>
                   <Table.Cell className="user-cell">
                     <User address={item.beneficiary} />
                   </Table.Cell>
@@ -84,7 +87,9 @@ const TipsTable = ({ data, loading }) => {
                     <ReasonText>{item.reason}</ReasonText>
                   </Table.Cell>
                   <Table.Cell className="balance-cell" textAlign={"right"}>
-                    <Balance value={item.medianValue} />
+                    { item.showStatus === TipStatus.Retracted
+                        ? '--'
+                        : <Balance value={item.medianValue} /> }
                   </Table.Cell>
                   <Table.Cell
                     className={`status-cell ${
@@ -95,16 +100,18 @@ const TipsTable = ({ data, loading }) => {
                     {item.showTime ? (
                       <PairTextVertical
                         value={item.showStatus}
-                        detail={dayjs(item.latestState.time).format(
+                        detail={dayjs(parseInt(item.latestState.time)).format(
                           "YYYY-MM-DD HH:mm"
                         )}
                       />
                     ) : (
-                      item.showStatus
+                      item.showStatus === TipStatus.Tipping
+                        ? `${item.showStatus} (${item.tipsCount})`
+                        : item.showStatus
                     )}
                   </Table.Cell>
                   <Table.Cell className="link-cell hidden">
-                    <NavLink to="/detail">
+                    <NavLink to={`/tips/${item.proposeAtBlockHeight}_${item.hash}`}>
                       <RightButton />
                     </NavLink>
                   </Table.Cell>

@@ -20,8 +20,8 @@ const CustomTable = styled(Table)`
     padding-bottom: 14px !important;
   }
   .user-cell {
-    width: 172px !important;
-    max-width: 172px !important;
+    width: 192px !important;
+    max-width: 192px !important;
   }
   .balance-cell {
     width: 139px !important;
@@ -31,6 +31,9 @@ const CustomTable = styled(Table)`
   }
   .link-cell {
     width: 44px !important;
+  }
+  .time-cell {
+    min-width: 180px !important;
   }
   td:first-child {
     font-weight: 400 !important;

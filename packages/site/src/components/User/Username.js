@@ -1,10 +1,13 @@
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
+import {Popup} from "semantic-ui-react";
 
 import TextMinor from "../TextMinor";
 import { TEXT_DARK_MAJOR } from "../../constants";
+import { useWindowSize } from "../../utils/hooks";
 
 const TextUsername = styled(TextMinor)`
+  white-space: nowrap;
   cursor: pointer;
   flex-grow: 1;
   &:hover {
@@ -13,20 +16,25 @@ const TextUsername = styled(TextMinor)`
   }
 `;
 
-const Username = ({ name, address }) => {
-  const usernameRef = useRef(null);
-  useLayoutEffect(() => {
-    // check if address is valid
-    // if (!name && usernameRef.current.clientWidth > 120 && address) {
-    if (address) {
-      usernameRef.current.innerHTML = `${address.substring(
-        0,
-        6
-      )}...${address.substring(address.length - 6, address.length)}`;
-    }
-  });
-  const username = name ? name : address ? address : "";
-  return <TextUsername ref={usernameRef}>{username}</TextUsername>;
+const Username = ({ address, name, ellipsis, popup }) => {
+  const [disabledPopup, setDisabledPopup] = useState(true)
+  const [width] = useWindowSize();
+  useEffect(() => {
+    setDisabledPopup(!popup || width < 1128)
+  }, [popup, width])
+  let displayAddress = address;
+  if (ellipsis && address) {
+    displayAddress = `${address.substring(0, 6)}...${address.substring(address.length - 6, address.length)}`
+  }
+  const displayName = name ? name : displayAddress;
+  return (
+    <Popup
+      content={address}
+      size='mini'
+      disabled={disabledPopup}
+      trigger={<TextUsername>{displayName}</TextUsername>}
+    />
+  );
 };
 
 export default Username;

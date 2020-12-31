@@ -1,3 +1,5 @@
+const ksmFirstTipClosedHeight = 2192357
+
 const TipEvents = Object.freeze({
   NewTip: "NewTip",
   TipClosing: "TipClosing",
@@ -64,7 +66,12 @@ const CouncilMethods = Object.freeze({
 const Modules = Object.freeze({
   Treasury: "treasury",
   Council: "council",
+  Proxy: "proxy",
 });
+
+const ProxyMethods = Object.freeze({
+  proxy: "proxy"
+})
 
 module.exports = {
   Modules,
@@ -76,4 +83,6 @@ module.exports = {
   TipEvents,
   CouncilEvents,
   CouncilMethods,
+  ProxyMethods,
+  ksmFirstTipClosedHeight,
 };

@@ -12,7 +12,7 @@ class TipsController {
 
     const tipCol = await getTipCollection();
     const tips = await tipCol
-      .find({})
+      .find({}, { timeline: 0 })
       .sort({
         isClosedOrRetracted: 1,
         "indexer.blockHeight": -1,
@@ -30,11 +30,20 @@ class TipsController {
     };
   }
 
+  async getTipsCount(ctx) {
+    const tipCol = await getTipCollection();
+    const tipsCount = await tipCol.estimatedDocumentCount();
+    ctx.body = tipsCount;
+  }
+
   async getTipDetail(ctx) {
-    const { hash } = ctx.params;
+    const { blockHeight, tipHash } = ctx.params;
 
     const tipCol = await getTipCollection();
-    const tip = await tipCol.findOne({ hash });
+    const tip = await tipCol.findOne({
+      hash: tipHash,
+      'indexer.blockHeight': parseInt(blockHeight),
+    });
 
     if (!tip) {
       ctx.status = 404;
@@ -44,26 +53,28 @@ class TipsController {
     ctx.body = {
       hash: tip.hash,
       proposeTime: tip.indexer.blockTime,
+      proposeAtBlockHeight: tip.indexer.blockHeight,
       beneficiary: tip.meta?.who,
-      finder: Array.isArray(tip.meta?.finder)
-        ? tip.meta.finder[0]
-        : tip.meta?.finder ?? tip.signer,
-      reason: tip.meta?.reasonText,
+      finder: tip.finder,
+      reason: tip.reason,
       latestState: {
         state: tip.state?.state,
         time: tip.state?.indexer.blockTime,
         blockHeight: tip.state?.indexer.blockHeight,
       },
-      tips: tip.meta?.tips,
+      tipsCount: tip.meta?.tips.length,
       medianValue: tip.medianValue,
-      tippers: tip.meta?.tippers,
-      ...(tip.meta?.closes
-        ? {
-            closeAtBlockHeight: tip.meta.closes,
-            countdownFromBlockHeight: tip.meta.closes - tip.meta.tipCountdown,
-          }
-        : {}),
+      tippersCount: tip.tippersCount,
+      closeFromBlockHeight: tip.meta?.closes,
+      timeline: tip.timeline,
     };
+  }
+
+  async getTipTimeline(ctx) {
+    const { blockHeight, tipHash } = ctx.params;
+
+    ctx.status = 404;
+    return;
   }
 }
 

@@ -17,13 +17,13 @@ const Label = styled.span`
   color: rgba(29, 37, 60, 0.64);
 `;
 
-const PolygonLabel = ({ value }) => {
+const TimeLabel = ({ value }) => {
   return (
     <Wrapper>
-      <Image src={"./imgs/polygon.svg"} />
+      <Image src={"/imgs/time.svg"} />
       <Label>{value}</Label>
     </Wrapper>
   );
 };
 
-export default PolygonLabel;
+export default TimeLabel;

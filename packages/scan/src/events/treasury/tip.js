@@ -1,26 +1,30 @@
 const { TipEvents } = require("../../utils/constants");
-const { saveNewTip, saveTipTimeline, updateTip } = require("../../store/tip");
+const { saveNewTip, updateTip } = require("../../store/tip");
+const { logger } = require("../../utils");
 
 function isTipEvent(method) {
   return TipEvents.hasOwnProperty(method);
 }
 
-const isStateChange = isTipEvent;
+function tipStateChange(eventName) {
+  return [TipEvents.TipClosed, TipEvents.TipRetracted].includes(eventName);
+}
 
-async function handleTipEvent(method, jsonData, extrinsic, indexer, sort) {
+async function handleTipEvent(method, eventData, extrinsic, blockIndexer) {
   if (!isTipEvent(method)) {
     return;
   }
 
   if (method === TipEvents.NewTip) {
-    const [hash] = jsonData;
-    await saveNewTip(hash, extrinsic, indexer);
+    const [hash] = eventData;
+    await saveNewTip(hash, extrinsic, blockIndexer);
   }
 
-  if (isStateChange(method)) {
-    const hash = jsonData[0];
-    await saveTipTimeline(hash, method, jsonData, indexer, sort);
-    await updateTip(hash, method, jsonData, indexer);
+  if (tipStateChange(method)) {
+    const hash = eventData[0];
+    logger.info(`update tip with event ${method}`);
+    await updateTip(hash, method, eventData, blockIndexer, extrinsic);
+    // await saveTipTimeline(hash, method, jsonData, blockIndexer, sort);
   }
 }
 
