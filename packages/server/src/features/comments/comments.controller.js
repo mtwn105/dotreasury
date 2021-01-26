@@ -21,6 +21,9 @@ class CommentController {
   async setCommentReaction(ctx) {
     const commentId = ctx.params.commentId;
     const { reaction } = ctx.request.body;
+    if (!reaction) {
+      throw new HttpError(400, "Reaction is missing");
+    }
     const user = ctx.request.user;
     ctx.body = await commentService.setCommentReaction(
       commentId,
