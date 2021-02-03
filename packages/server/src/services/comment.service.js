@@ -66,6 +66,10 @@ class CommentService {
   }
 
   async postComment(indexer, content, author) {
+    if (!author.emailVerified) {
+      throw new HttpError(400, "Email address is not verified.");
+    }
+
     const commentCol = await getCommentCollection();
 
     const now = new Date();
